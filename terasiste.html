@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terasiště — Analýza firmy</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0d0e;
+  --surface: #131618;
+  --card: #191d1f;
+  --border: #252b2e;
+  --pink: #e91e8c;
+  --pink-dim: rgba(233,30,140,0.15);
+  --pink-glow: rgba(233,30,140,0.4);
+  --teal: #00c4b4;
+  --teal-dim: rgba(0,196,180,0.12);
+  --yellow: #f5c518;
+  --yellow-dim: rgba(245,197,24,0.12);
+  --red: #ff4757;
+  --red-dim: rgba(255,71,87,0.12);
+  --text: #e8eaec;
+  --muted: #6c7a82;
+  --dim: #3a4248;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* BG texture */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 800px 500px at 80% -10%, rgba(233,30,140,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 600px 400px at -10% 80%, rgba(0,196,180,0.04) 0%, transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0;
+  width: 220px;
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.logo-icon {
+  width: 32px; height: 32px;
+  background: var(--pink);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+.logo-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.logo-sub {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.nav-section {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding: 0 24px 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 24px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  position: relative;
+}
+
+.nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.nav-item.active { color: var(--pink); border-left-color: var(--pink); background: var(--pink-dim); }
+
+.nav-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--dim);
+  flex-shrink: 0;
+}
+.nav-item.active .nav-dot { background: var(--pink); box-shadow: 0 0 6px var(--pink-glow); }
+
+.nav-badge {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--dim);
+  color: var(--muted);
+}
+.nav-item.active .nav-badge { background: var(--pink-dim); color: var(--pink); }
+
+/* score in sidebar */
+.sidebar-score {
+  margin: 16px;
+  background: linear-gradient(135deg, var(--pink-dim), transparent);
+  border: 1px solid rgba(233,30,140,0.3);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+.score-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--pink);
+  line-height: 1;
+}
+.score-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* ── MAIN ── */
+.main {
+  margin-left: 220px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  background: rgba(11,13,14,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+}
+
+.topbar-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.topbar-tabs {
+  display: flex;
+  gap: 4px;
+}
+.tab-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn:hover { background: var(--card); color: var(--text); }
+.tab-btn.active { background: var(--pink); color: #fff; }
+
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.pill {
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 4px 10px; border-radius: 20px;
+}
+.pill-green { background: rgba(0,196,180,0.15); color: var(--teal); }
+.pill-yellow { background: var(--yellow-dim); color: var(--yellow); }
+
+/* ── CONTENT ── */
+.content {
+  padding: 40px;
+  max-width: 1100px;
+}
+
+/* ── SECTION HEADER ── */
+.section-header {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+.section-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 72px;
+  font-weight: 900;
+  color: var(--border);
+  line-height: 1;
+  user-select: none;
+}
+.section-info {}
+.section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text);
+}
+.section-desc { font-size: 14px; color: var(--muted); margin-top: 4px; }
+
+/* ── CARDS GRID ── */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; }
+
+/* ── CARD ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+  transition: border-color 0.2s, transform 0.2s;
+  cursor: default;
+}
+.card:hover { border-color: var(--pink); transform: translateY(-2px); }
+.card-icon { font-size: 24px; margin-bottom: 12px; }
+.card-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.card-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+.card-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+/* ── STAT CARDS ── */
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.2s;
+}
+.stat-card:hover { border-color: var(--pink); }
+.stat-icon-wrap {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.stat-body {}
+.stat-label { font-size: 12px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 26px; font-weight: 800; color: var(--text); line-height: 1.1; margin-top: 2px;
+}
+
+/* ── SECTION BOX ── */
+.section-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.section-box-header {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+.section-box-header:hover { background: rgba(255,255,255,0.02); }
+.section-box-title {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700; font-size: 16px; text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.section-box-badge {
+  font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.badge-green { background: rgba(0,196,180,0.15); color: var(--teal); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-yellow { background: var(--yellow-dim); color: var(--yellow); }
+.badge-pink { background: var(--pink-dim); color: var(--pink); }
+.badge-blue { background: rgba(64,144,255,0.12); color: #4090ff; }
+
+.section-box-chevron {
+  color: var(--muted); font-size: 14px;
+  transition: transform 0.3s;
+}
+.section-box.open .section-box-chevron { transform: rotate(180deg); }
+
+.section-box-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+.section-box.open .section-box-body { max-height: 1200px; }
+.section-box-inner { padding: 0 24px 24px; }
+
+/* ── LIST ITEMS ── */
+.check-list { list-style: none; }
+.check-list li {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px; color: var(--text);
+  line-height: 1.5;
+}
+.check-list li:last-child { border-bottom: none; }
+.check-icon { font-size: 14px; margin-top: 2px; flex-shrink: 0; }
+
+/* ── DIVIDER ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+/* ── PAGE SECTIONS ── */
+.page { display: none; }
+.page.active { display: block; }
+/* Initial state handled by JS on DOMContentLoaded */
+
+/* ── KOMPETITORSKA TABULKA ── */
+.comp-table { width: 100%; border-collapse: collapse; }
+.comp-table th {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--muted);
+  padding: 10px 16px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.comp-table td {
+  padding: 12px 16px; font-size: 13px;
+  border-bottom: 1px solid rgba(37,43,46,0.6);
+  vertical-align: middle;
+}
+.comp-table tr:hover td { background: rgba(255,255,255,0.015); }
+.comp-name { font-weight: 600; color: var(--text); }
+.comp-strength, .comp-weak { font-size: 12px; color: var(--muted); }
+.dot-rating { display: flex; gap: 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.on { background: var(--pink); }
+.dot.off { background: var(--dim); }
+
+/* ── SWOT ── */
+.swot-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.swot-cell {
+  padding: 28px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+.swot-cell:nth-child(2n) { border-right: none; }
+.swot-cell:nth-child(n+3) { border-bottom: none; }
+.swot-head {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 900; text-transform: uppercase;
+  letter-spacing: 2px; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.swot-item {
+  display: flex; gap: 8px; align-items: flex-start;
+  font-size: 13px; margin-bottom: 8px; color: #c4cacf; line-height: 1.5;
+}
+
+/* ── PPC FUNNEL ── */
+.funnel { display: flex; flex-direction: column; gap: 0; }
+.funnel-step {
+  display: flex; align-items: center;
+  padding: 18px 24px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  margin-bottom: -1px;
+  position: relative;
+  transition: all 0.2s;
+  cursor: default;
+}
+.funnel-step:first-child { border-radius: 12px 12px 0 0; }
+.funnel-step:last-child { border-radius: 0 0 12px 12px; margin-bottom: 0; }
+.funnel-step:hover { background: rgba(233,30,140,0.05); z-index: 1; }
+.funnel-arrow {
+  font-size: 18px; color: var(--muted); margin-right: 16px; flex-shrink: 0;
+}
+.funnel-label { font-weight: 600; font-size: 14px; flex: 1; }
+.funnel-status {
+  font-size: 12px; padding: 3px 10px; border-radius: 20px;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.funnel-bar {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: var(--pink-dim);
+  border-radius: 12px 0 0 12px;
+  z-index: -1;
+}
+
+/* ── PROGRESS BARS ── */
+.progress-item { margin-bottom: 18px; }
+.progress-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+.progress-name { font-size: 13px; font-weight: 500; }
+.progress-pct { font-size: 13px; font-weight: 700; color: var(--pink); }
+.progress-track {
+  height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--pink), #ff6bbf);
+  transition: width 1s ease;
+}
+.progress-fill.teal { background: linear-gradient(90deg, var(--teal), #4eeee0); }
+.progress-fill.yellow { background: linear-gradient(90deg, var(--yellow), #ffe066); }
+
+/* ── DOPORUCENI ── */
+.rec-row {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  align-items: start;
+  gap: 20px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+.rec-row:last-child { border-bottom: none; }
+.rec-phase {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+  padding: 4px 10px; border-radius: 20px; text-align: center;
+}
+.rec-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.rec-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.rec-impact {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--pink);
+  white-space: nowrap;
+}
+
+/* ── VERDIKT ── */
+.verdict-box {
+  background: linear-gradient(135deg, rgba(233,30,140,0.1), rgba(0,196,180,0.05));
+  border: 1px solid rgba(233,30,140,0.3);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+}
+.verdict-headline {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 40px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 3px;
+  color: var(--text); line-height: 1.1; margin-bottom: 16px;
+}
+.verdict-headline span { color: var(--pink); }
+.verdict-text { font-size: 15px; color: #a0adb4; line-height: 1.8; max-width: 600px; margin: 0 auto 24px; }
+.verdict-tags { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.verdict-tag {
+  padding: 8px 18px; border-radius: 30px;
+  font-size: 13px; font-weight: 600;
+  border: 1px solid;
+}
+
+/* ── ANIMATE IN ── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.page.active .anim {
+  animation: fadeUp 0.35s ease both;
+}
+
+/* ── HIGHLIGHT BAR ── */
+.highlight-bar {
+  border-left: 3px solid var(--pink);
+  padding: 12px 18px;
+  background: var(--pink-dim);
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: #d9a0c0;
+  margin: 16px 0;
+  line-height: 1.6;
+}
+
+/* ── PILLAR TABS ── */
+.pillar-tab {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--muted);
+  font-family: 'Barlow', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.pillar-tab:hover { border-color: var(--pink); color: var(--text); }
+.pillar-tab.active { background: var(--pink); border-color: var(--pink); color: #fff; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">
+      <div class="logo-icon">🏡</div>
+      <div class="logo-name">Terasiště</div>
+    </div>
+    <div class="logo-sub">Analýza firmy 2025</div>
+  </div>
+
+  <div class="sidebar-score">
+    <div class="score-num">6.2</div>
+    <div class="score-label">Celkové skóre / 10</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Přehled</div>
+    <a class="nav-item" onclick="showPage('profil')">
+      <div class="nav-dot"></div>Profil firmy
+    </a>
+    <a class="nav-item" onclick="showPage('web')">
+      <div class="nav-dot"></div>Analýza webu
+      <span class="nav-badge">5</span>
+    </a>
+    <a class="nav-item" onclick="showPage('ppc')">
+      <div class="nav-dot"></div>PPC & Marketing
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Konkurence & Strategie</div>
+    <a class="nav-item" onclick="showPage('konkurence')">
+      <div class="nav-dot"></div>Konkurence
+      <span class="nav-badge">7</span>
+    </a>
+    <a class="nav-item" onclick="showPage('swot')">
+      <div class="nav-dot"></div>SWOT
+    </a>
+    <a class="nav-item" onclick="showPage('strategie')">
+      <div class="nav-dot"></div>Strategie
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Mise & Vize</div>
+    <a class="nav-item" onclick="showPage('misevize')">
+      <div class="nav-dot"></div>Mise, Vize & Strategie
+      <span class="nav-badge">🆕</span>
+    </a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Závěr</div>
+    <a class="nav-item" onclick="showPage('doporuceni')">
+      <div class="nav-dot"></div>Doporučení
+    </a>
+    <a class="nav-item" onclick="showPage('verdikt')">
+      <div class="nav-dot"></div>Verdikt
+    </a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title" id="topbarTitle">Profil firmy</div>
+    <div class="topbar-tabs">
+      <button class="tab-btn" onclick="showPage('profil')">Profil</button>
+      <button class="tab-btn" onclick="showPage('web')">Web</button>
+      <button class="tab-btn" onclick="showPage('ppc')">PPC</button>
+      <button class="tab-btn" onclick="showPage('konkurence')">Konkurence</button>
+      <button class="tab-btn" onclick="showPage('swot')">SWOT</button>
+      <button class="tab-btn" onclick="showPage('strategie')">Strategie</button>
+      <button class="tab-btn" onclick="showPage('misevize')">Mise & Vize</button>
+      <button class="tab-btn" onclick="showPage('doporuceni')">Doporučení</button>
+      <button class="tab-btn" onclick="showPage('verdikt')">Verdikt</button>
+    </div>
+    <div class="topbar-right">
+      <span class="pill pill-yellow">⚠ Positioning slabý</span>
+      <span class="pill pill-green">✓ Produkt silný</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════ CONTENT ══════════════════════════════════════ -->
+  <div class="content">
+
+    <!-- PAGE: PROFIL -->
+    <div class="page" id="page-profil">
+      <div class="section-header">
+        <div class="section-num">01</div>
+        <div class="section-info">
+          <div class="section-title">Profil firmy</div>
+          <div class="section-desc">Základní informace, obchodní model a produktové portfolio</div>
+        </div>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--pink-dim)">🏗️</div>
+          <div class="stat-body">
+            <div class="stat-label">Sídlo</div>
+            <div class="stat-val" style="font-size:18px">Brno</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--teal-dim)">📦</div>
+          <div class="stat-body">
+            <div class="stat-label">Obchodní linie</div>
+            <div class="stat-val">3</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--yellow-dim)">🛒</div>
+          <div class="stat-body">
+            <div class="stat-label">Segment</div>
+            <div class="stat-val" style="font-size:18px">Střední</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--red-dim)">📍</div>
+          <div class="stat-body">
+            <div class="stat-label">Dosah</div>
+            <div class="stat-val" style="font-size:18px">Regionální</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:24px;">
+        <div class="section-box open">
+          <div class="section-box-header" onclick="toggleBox(this)">
+            <div class="section-box-title">🏭 Obchodní model</div>
+            <div class="section-box-chevron">▼</div>
+          </div>
+          <div class="section-box-body">
+            <div class="section-box-inner">
+              <ul class="check-list">
+                <li><span class="check-icon">🔨</span>Realizace zakázek — teras a pergol na klíč</li>
+                <li><span class="check-icon">🪵</span>Prodej materiálu — WPC, dřevo, bambus</li>
+                <li><span class="check-icon">🏪</span>Showroom / prodejna v Brně</li>
+              </ul>
+              <div class="highlight-bar" style="margin-top:16px;">
+                💡 Hybridní model mezi klasickým řemeslníkem a specializovaným „terasovým studiem" — to je unikátní pozice na trhu.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-box open">
+          <div class="section-box-header" onclick="toggleBox(this)">
+            <div class="section-box-title">📋 Produktové portfolio</div>
+            <div class="section-box-chevron">▼</div>
+          </div>
+          <div class="section-box-body">
+            <div class="section-box-inner">
+              <ul class="check-list">
+                <li><span class="check-icon">✅</span>WPC terasy</li>
+                <li><span class="check-icon">✅</span>Dřevěné terasy (evropské i exotické dřeviny)</li>
+                <li><span class="check-icon">✅</span>Bambusové terasy</li>
+                <li><span class="check-icon">✅</span>Pergoly — dřevěné, hliníkové, bioklimatické</li>
+                <li><span class="check-icon">✅</span>Carporty</li>
+                <li><span class="check-icon">✅</span>Doplňkový materiál</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-box">
+        <div class="section-box-header" onclick="toggleBox(this)">
+          <div class="section-box-title">🎯 Positioning</div>
+          <span class="section-box-badge badge-yellow">⚠ Potřebuje upřesnit</span>
+          <div class="section-box-chevron">▼</div>
+        </div>
+        <div class="section-box-body">
+          <div class="section-box-inner">
+            <div class="grid-3">
+              <div class="card">
+                <div class="card-icon">📍</div>
+                <div class="card-title">Lokalita</div>
+                <div class="card-value" style="font-size:20px">Brno + okolí</div>
+                <div class="card-sub">Lokální hráč s jasným regionálním zaměřením</div>
+              </div>
+              <div class="card">
+                <div class="card-icon">💰</div>
+                <div class="card-title">Cenový segment</div>
+                <div class="card-value" style="font-size:20px">Střední</div>
+                <div class="card-sub">Není jasně low-cost ani premium</div>
+              </div>
+              <div class="card">
+                <div class="card-icon">💬</div>
+                <div class="card-title">Komunikace</div>
+                <div class="card-value" style="font-size:20px">Emocionální</div>
+                <div class="card-sub">„Pohodová cesta" — důraz na zážitek</div>
+              </div>
+            </div>
+            <div class="highlight-bar" style="margin-top:16px; border-color: var(--yellow); background: var(--yellow-dim); color: #c4a030;">
+              ⚠️ Positioning není ostrý — firma není jasně profilovaná ani jako low-cost, ani jako premium expert. To může oslabovat marketingovou komunikaci.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: WEB -->
+    <div class="page" id="page-web">
+      <div class="section-header">
+        <div class="section-num">02</div>
+        <div class="section-info">
+          <div class="section-title">Analýza webu</div>
+          <div class="section-desc">Co funguje, co chybí a jaký je dopad na konverze</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:24px;">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--teal); margin-bottom:12px;">✅ Co funguje dobře</div>
+          <div class="section-box" style="margin-bottom:12px;">
+            <div class="section-box-header" onclick="toggleBox(this)">
+              <div class="section-box-title" style="font-size:14px;"><span style="font-size:18px">📖</span> Srozumitelnost nabídky</div>
+              <span class="section-box-badge badge-green">Silné</span>
+              <div class="section-box-chevron">▼</div>
+            </div>
+            <div class="section-box-body"><div class="section-box-inner">
+              <ul class="check-list">
+                <li><span class="check-icon">✓</span>Uživatel rychle pochopí, co firma dělá</li>
+                <li><span class="check-icon">✓</span>Jaké produkty nabízí</li>
+                <li><span class="check-icon">✓</span>Že realizuje zakázky na klíč</li>
+              </ul>
+            </div></div>
+          </div>
+          <div class="section-box" style="margin-bottom:12px;">
+            <div class="section-box-header" onclick="toggleBox(this)">
+              <div class="section-box-title" style="font-size:14px;"><span style="font-size:18px">🖼️</span> Reference & Showroom</div>
+              <span class="section-box-badge badge-green">Silné</span>
+              <div class="section-box-chevron">▼</div>
+            </div>
+            <div class="section-box-body"><div class="section-box-inner">
+              <ul class="check-list">
+                <li><span class="check-icon">✓</span>Reálné projekty s popisem realizací</li>
+                <li><span class="check-icon">✓</span>Showroom jako silný konverzní prvek (offline důvěra)</li>
+                <li><span class="check-icon">✓</span>FAQ + orientační ceny snižují nejistotu</li>
+              </ul>
+            </div></div>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--red); margin-bottom:12px;">❌ Slabiny webu</div>
+          <div class="section-box" style="margin-bottom:12px;">
+            <div class="section-box-header" onclick="toggleBox(this)">
+              <div class="section-box-title" style="font-size:14px;"><span style="font-size:18px">📄</span> Chybí landing pages</div>
+              <span class="section-box-badge badge-red">Kritické</span>
+              <div class="section-box-chevron">▼</div>
+            </div>
+            <div class="section-box-body"><div class="section-box-inner">
+              <ul class="check-list">
+                <li><span class="check-icon">✗</span>Stránky nejsou opt. na konkrétní dotazy</li>
+                <li><span class="check-icon">✗</span>Chybí „WPC terasa Brno — cena a realizace"</li>
+                <li><span class="check-icon">✗</span>Chybí „Pergola Brno — kalkulace zdarma"</li>
+              </ul>
+              <div class="highlight-bar" style="margin-top:12px;">📉 Dopad: nižší konverzní poměr z PPC</div>
+            </div></div>
+          </div>
+          <div class="section-box" style="margin-bottom:12px;">
+            <div class="section-box-header" onclick="toggleBox(this)">
+              <div class="section-box-title" style="font-size:14px;"><span style="font-size:18px">🎯</span> Slabá konverzní architektura</div>
+              <span class="section-box-badge badge-red">Kritické</span>
+              <div class="section-box-chevron">▼</div>
+            </div>
+            <div class="section-box-body"><div class="section-box-inner">
+              <ul class="check-list">
+                <li><span class="check-icon">✗</span>Chybí silné CTA (např. „kalkulace do 24h")</li>
+                <li><span class="check-icon">✗</span>Chybí mikro-konverze a lead magnet</li>
+                <li><span class="check-icon">✗</span>Web funguje jako prezentace, ne jako prodejní nástroj</li>
+              </ul>
+            </div></div>
+          </div>
+          <div class="section-box">
+            <div class="section-box-header" onclick="toggleBox(this)">
+              <div class="section-box-title" style="font-size:14px;"><span style="font-size:18px">🔍</span> Slabé SEO & kalkulátor</div>
+              <span class="section-box-badge badge-yellow">Střední</span>
+              <div class="section-box-chevron">▼</div>
+            </div>
+            <div class="section-box-body"><div class="section-box-inner">
+              <ul class="check-list">
+                <li><span class="check-icon">✗</span>Chybí blog, obsahové články, edukace</li>
+                <li><span class="check-icon">✗</span>Kalkulátor (konkurence Woodparket ho má)</li>
+                <li><span class="check-icon">✗</span>UX: opakující se obsah, slabší hierarchie</li>
+              </ul>
+              <div class="highlight-bar" style="margin-top:12px;">📉 Dopad: vyšší závislost na PPC, nižší engagement</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:13px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:16px;">Skóre webu podle oblastí</div>
+        <div class="card">
+          <div class="progress-item">
+            <div class="progress-header"><span class="progress-name">Přehlednost & srozumitelnost</span><span class="progress-pct">75%</span></div>
+            <div class="progress-track"><div class="progress-fill teal" style="width:75%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-header"><span class="progress-name">Konverzní prvky</span><span class="progress-pct">30%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:30%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-header"><span class="progress-name">SEO optimalizace</span><span class="progress-pct">25%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:25%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-header"><span class="progress-name">Landing pages</span><span class="progress-pct">15%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:15%"></div></div>
+          </div>
+          <div class="progress-item" style="margin-bottom:0">
+            <div class="progress-header"><span class="progress-name">Reference & důvěra</span><span class="progress-pct">80%</span></div>
+            <div class="progress-track"><div class="progress-fill teal" style="width:80%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: PPC -->
+    <div class="page" id="page-ppc">
+      <div class="section-header">
+        <div class="section-num">03</div>
+        <div class="section-info">
+          <div class="section-title">PPC & Digitální marketing</div>
+          <div class="section-desc">Aktuální stav, hlavní problém a ideální setup</div>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--teal-dim)">✅</div>
+          <div class="stat-body"><div class="stat-label">Google Search</div><div class="stat-val" style="font-size:16px; color:var(--teal)">Aktivní</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--teal-dim)">✅</div>
+          <div class="stat-body"><div class="stat-label">Performance Max</div><div class="stat-val" style="font-size:16px; color:var(--teal)">Aktivní</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--yellow-dim)">⚠️</div>
+          <div class="stat-body"><div class="stat-label">Remarketing</div><div class="stat-val" style="font-size:16px; color:var(--yellow)">Nezřízený</div></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:24px;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:14px;">Hlavní problém: chybí propojení funnel</div>
+        <div class="funnel">
+          <div class="funnel-step">
+            <div class="funnel-bar" style="width:100%"></div>
+            <div class="funnel-arrow">1.</div>
+            <div class="funnel-label">PPC kampaň (Google Ads Search + PMax)</div>
+            <span class="funnel-status" style="background:var(--teal-dim); color:var(--teal)">✅ Funguje</span>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar" style="width:80%; background: rgba(245,197,24,0.1)"></div>
+            <div class="funnel-arrow">2.</div>
+            <div class="funnel-label">Landing page (přistání z reklamy)</div>
+            <span class="funnel-status" style="background:var(--red-dim); color:var(--red)">❌ Chybí</span>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar" style="width:50%; background: rgba(245,197,24,0.08)"></div>
+            <div class="funnel-arrow">3.</div>
+            <div class="funnel-label">Remarketing (sledování nezkonvertovaných)</div>
+            <span class="funnel-status" style="background:var(--red-dim); color:var(--red)">❌ Chybí</span>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar" style="width:20%; background: rgba(233,30,140,0.06)"></div>
+            <div class="funnel-arrow">4.</div>
+            <div class="funnel-label">Konverze (poptávka / návštěva showroomu)</div>
+            <span class="funnel-status" style="background:var(--red-dim); color:var(--red)">📉 Podvýkon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="section-box open">
+          <div class="section-box-header" onclick="toggleBox(this)">
+            <div class="section-box-title">🎯 Ideální kampaně</div>
+            <div class="section-box-chevron">▼</div>
+          </div>
+          <div class="section-box-body"><div class="section-box-inner">
+            <ul class="check-list">
+              <li><span class="check-icon">→</span>WPC terasa (vlastní kampaň + LP)</li>
+              <li><span class="check-icon">→</span>Dřevěná terasa (vlastní kampaň + LP)</li>
+              <li><span class="check-icon">→</span>Pergola Brno (vlastní kampaň + LP)</li>
+              <li><span class="check-icon">→</span>Terasa na klíč (vlastní kampaň + LP)</li>
+              <li><span class="check-icon">→</span>Materiál (e-shop segment)</li>
+            </ul>
+          </div></div>
+        </div>
+        <div class="section-box open">
+          <div class="section-box-header" onclick="toggleBox(this)">
+            <div class="section-box-title">📸 Kreativa & Remarketing</div>
+            <div class="section-box-chevron">▼</div>
+          </div>
+          <div class="section-box-body"><div class="section-box-inner">
+            <ul class="check-list">
+              <li><span class="check-icon">→</span>Fotky a video realizací</li>
+              <li><span class="check-icon">→</span>Before/After formát</li>
+              <li><span class="check-icon">→</span>Reference zákazníků</li>
+              <li><span class="check-icon">→</span>Remarketing segmentovaný podle zájmu</li>
+              <li><span class="check-icon">→</span>YouTube — samostatný kanál (ne jen PMax)</li>
+            </ul>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: KONKURENCE -->
+    <div class="page" id="page-konkurence">
+      <div class="section-header">
+        <div class="section-num">04</div>
+        <div class="section-info">
+          <div class="section-title">Konkurence</div>
+          <div class="section-desc">7 hráčů na jihomoravském trhu — silné stránky a slabiny</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:24px; padding:0; overflow:hidden;">
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Firma</th>
+              <th>Silné stránky</th>
+              <th>Slabiny</th>
+              <th>Marketing</th>
+              <th>Hrozba</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="comp-name">TerasyBrno / Termok Eko</div></td>
+              <td><span class="comp-strength">Dlouhá historie, specializace, silné CTA</span></td>
+              <td><span class="comp-weak">Méně moderní marketing</span></td>
+              <td><div class="dot-rating"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot off"></div><div class="dot off"></div></div></td>
+              <td><span class="section-box-badge badge-yellow">Střední</span></td>
+            </tr>
+            <tr>
+              <td><div class="comp-name">Woodparket</div></td>
+              <td><span class="comp-strength">Nejlepší web, kalkulátor, SEO, landing pages</span></td>
+              <td><span class="comp-weak">Méně osobní brand</span></td>
+              <td><div class="dot-rating"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div></div></td>
+              <td><span class="section-box-badge badge-red">Vysoká</span></td>
+            </tr>
+            <tr>
+              <td><div class="comp-name">Planko</div></td>
+              <td><span class="comp-strength">Obsah, edukace, komunikace procesu</span></td>
+              <td><span class="comp-weak">Slabší v pergolách</span></td>
+              <td><div class="dot-rating"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot off"></div></div></td>
+              <td><span class="section-box-badge badge-red">Vysoká</span></td>
+            </tr>
+            <tr>
+              <td><div class="comp-name">Artisan</div></td>
+              <td><span class="comp-strength">Flexibilita zakázek</span></td>
+              <td><span class="comp-weak">Slabý marketing</span></td>
+              <td><div class="dot-rating"><div class="dot on"></div><div class="dot on"></div><div class="dot off"></div><div class="dot off"></div><div class="dot off"></div></div></td>
+              <td><span class="section-box-badge badge-yellow">Střední</span></td>
+            </tr>
+            <tr>
+              <td><div class="comp-name">Profi Terasy</div></td>
+              <td><span class="comp-strength">Performance marketing, silné CTA</span></td>
+              <td><span class="comp-weak">Méně lokální</span></td>
+              <td><div class="dot-rating"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot off"></div></div></td>
+              <td><span class="section-box-badge badge-yellow">Střední</span></td>
+            </tr>
+            <tr>
+              <td><div class="comp-name">Žijeme na zahradě</div></td>
+              <td><span class="comp-strength">Prémiový segment</span></td>
+              <td><span class="comp-weak">Úzký cílový segment</span></td>
+              <td><div class="dot-rating"><div class="dot on"></div><div class="dot on"></div><div class="dot on"></div><div class="dot off"></div><div class="dot off"></div></div></td>
+              <td><span class="section-box-badge badge-blue">Nízká</span></td>
+            </tr>
+            <tr>
+              <td><div class="comp-name">AL Pergoly / Bumerang</div></td>
+              <td><span class="comp-strength">Vlastní výroba</span></td>
+              <td><span class="comp-weak">Úzké produktové zaměření</span></td>
+              <td><div class="dot-rating"><div class="dot on"></div><div class="dot on"></div><div class="dot off"></div><div class="dot off"></div><div class="dot off"></div></div></td>
+              <td><span class="section-box-badge badge-blue">Nízká</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="highlight-bar" style="border-color: var(--red); background: var(--red-dim); color: #c08080;">
+        🔴 Hlavní hrozba: <strong>Woodparket</strong> a <strong>Planko</strong> jsou výrazně silnější v digitálním marketingu. Terasiště má produkt a showroom, ale prohrává v online viditelnosti.
+      </div>
+    </div>
+
+    <!-- PAGE: SWOT -->
+    <div class="page" id="page-swot">
+      <div class="section-header">
+        <div class="section-num">05</div>
+        <div class="section-info">
+          <div class="section-title">SWOT analýza</div>
+          <div class="section-desc">Silné/slabé stránky, příležitosti a hrozby</div>
+        </div>
+      </div>
+
+      <div class="swot-grid">
+        <div class="swot-cell" style="background:rgba(0,196,180,0.04)">
+          <div class="swot-head" style="color:var(--teal)">💪 Silné stránky <span style="font-size:13px;font-family:'Barlow',sans-serif;color:var(--muted);font-weight:400">(Strengths)</span></div>
+          <div class="swot-item"><span>✅</span>Šíroké produktové portfolio (WPC, dřevo, bambus, pergoly)</div>
+          <div class="swot-item"><span>✅</span>Fyzický showroom — jedinečný konverzní prvek</div>
+          <div class="swot-item"><span>✅</span>Hybridní model: realizace + prodej materiálu</div>
+          <div class="swot-item"><span>✅</span>Lokální znalost brněnského trhu</div>
+          <div class="swot-item"><span>✅</span>Reálné reference a realizace</div>
+          <div class="swot-item"><span>✅</span>FAQ + orientační ceny na webu</div>
+        </div>
+        <div class="swot-cell" style="background:rgba(255,71,87,0.03)">
+          <div class="swot-head" style="color:var(--red)">⚠️ Slabé stránky <span style="font-size:13px;font-family:'Barlow',sans-serif;color:var(--muted);font-weight:400">(Weaknesses)</span></div>
+          <div class="swot-item"><span>❌</span>Nejasný positioning (není low-cost ani premium)</div>
+          <div class="swot-item"><span>❌</span>Slabá konverzní architektura webu</div>
+          <div class="swot-item"><span>❌</span>Chybí výkonnostní landing pages</div>
+          <div class="swot-item"><span>❌</span>Žádný blog ani obsahový marketing</div>
+          <div class="swot-item"><span>❌</span>Slabé SEO — závislost na PPC</div>
+          <div class="swot-item"><span>❌</span>Chybí kalkulátor a lead magnety</div>
+        </div>
+        <div class="swot-cell" style="background:rgba(245,197,24,0.03)">
+          <div class="swot-head" style="color:var(--yellow)">🚀 Příležitosti <span style="font-size:13px;font-family:'Barlow',sans-serif;color:var(--muted);font-weight:400">(Opportunities)</span></div>
+          <div class="swot-item"><span>→</span>PPC optimalizace: landing pages + remarketing</div>
+          <div class="swot-item"><span>→</span>Obsahový marketing — blog, edukace, SEO</div>
+          <div class="swot-item"><span>→</span>Kalkulátor jako konverzní prvek</div>
+          <div class="swot-item"><span>→</span>Jasný positioning (prémiový nebo objemový)</div>
+          <div class="swot-item"><span>→</span>Využití showroomu v komunikaci</div>
+          <div class="swot-item"><span>→</span>Video obsah, YouTube, before/after</div>
+        </div>
+        <div class="swot-cell" style="background:rgba(233,30,140,0.03)">
+          <div class="swot-head" style="color:var(--pink)">⚡ Hrozby <span style="font-size:13px;font-family:'Barlow',sans-serif;color:var(--muted);font-weight:400">(Threats)</span></div>
+          <div class="swot-item"><span>!</span>Woodparket — digitálně nejsilnější konkurent</div>
+          <div class="swot-item"><span>!</span>Planko — silný v obsahu a edukaci</div>
+          <div class="swot-item"><span>!</span>Rostoucí ceny PPC (vyšší CPC)</div>
+          <div class="swot-item"><span>!</span>Ztráta pozice bez posílení marketingu</div>
+          <div class="swot-item"><span>!</span>Rozmělněná komunikace bez jasné značky</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: STRATEGIE -->
+    <div class="page" id="page-strategie">
+      <div class="section-header">
+        <div class="section-num">06</div>
+        <div class="section-info">
+          <div class="section-title">Strategický závěr</div>
+          <div class="section-desc">Dva možné směry vývoje a co rozhoduje o úspěchu</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:24px;">
+        <div class="card" style="border-color: rgba(0,196,180,0.3);">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; color:var(--teal); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Směr A: Prémiový positioning</div>
+          <div style="font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.6;">Důraz na design, kvalitu materiálů a servis. Cílení na náročnější klientelu.</div>
+          <ul class="check-list">
+            <li><span class="check-icon" style="color:var(--teal)">+</span>Vyšší marže na zakázku</li>
+            <li><span class="check-icon" style="color:var(--teal)">+</span>Menší cenová citlivost zákazníků</li>
+            <li><span class="check-icon" style="color:var(--teal)">+</span>Méně zakázek, ale vyšší hodnota</li>
+            <li><span class="check-icon" style="color:var(--muted)">−</span>Pomalejší škálování</li>
+            <li><span class="check-icon" style="color:var(--muted)">−</span>Náročnější na brand a kreativu</li>
+          </ul>
+        </div>
+        <div class="card" style="border-color: rgba(233,30,140,0.3);">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; color:var(--pink); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">Směr B: Výkonnostní positioning</div>
+          <div style="font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.6;">Důraz na rychlost, dostupnost a cenu. Větší objem zakázek.</div>
+          <ul class="check-list">
+            <li><span class="check-icon" style="color:var(--pink)">+</span>Větší objem zakázek</li>
+            <li><span class="check-icon" style="color:var(--pink)">+</span>Rychlejší škálování</li>
+            <li><span class="check-icon" style="color:var(--pink)">+</span>Jednodušší PPC komunikace</li>
+            <li><span class="check-icon" style="color:var(--muted)">−</span>Nižší marže</li>
+            <li><span class="check-icon" style="color:var(--muted)">−</span>Vyšší závislost na objemu</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="highlight-bar" style="border-color:var(--yellow); background:var(--yellow-dim); color:#c4a030; margin-bottom:24px;">
+        ⚠️ Bez jasného rozhodnutí hrozí rozmělněná komunikace a slabší odlišení od konkurence. Firma má potenciál stát se lídrem v regionu — podmínkou je posílení marketingu a strategické vymezení.
+      </div>
+
+      <div class="section-box open">
+        <div class="section-box-header" onclick="toggleBox(this)">
+          <div class="section-box-title">📊 Srovnání s konkurencí</div>
+          <div class="section-box-chevron">▼</div>
+        </div>
+        <div class="section-box-body"><div class="section-box-inner">
+          <div class="progress-item">
+            <div class="progress-header"><span class="progress-name">Produktová síla</span><span class="progress-pct" style="color:var(--teal)">85%</span></div>
+            <div class="progress-track"><div class="progress-fill teal" style="width:85%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-header"><span class="progress-name">Digitální marketing</span><span class="progress-pct">35%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:35%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-header"><span class="progress-name">SEO & obsah</span><span class="progress-pct">20%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:20%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="progress-header"><span class="progress-name">Brand & positioning</span><span class="progress-pct">40%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:40%"></div></div>
+          </div>
+          <div class="progress-item" style="margin-bottom:0">
+            <div class="progress-header"><span class="progress-name">Konverzní architektura</span><span class="progress-pct">25%</span></div>
+            <div class="progress-track"><div class="progress-fill" style="width:25%"></div></div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- PAGE: DOPORUCENI -->
+    <div class="page" id="page-doporuceni">
+      <div class="section-header">
+        <div class="section-num">07</div>
+        <div class="section-info">
+          <div class="section-title">Doporučení</div>
+          <div class="section-desc">Prioritizovaný akční plán ve třech horizontech</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="rec-row">
+          <div class="rec-phase" style="background:var(--red-dim); color:var(--red);">Ihned</div>
+          <div>
+            <div class="rec-title">Landing pages pro PPC kampaně</div>
+            <div class="rec-desc">Vytvořit dedikované stránky pro každý produkt: WPC terasa Brno, Pergola Brno, Terasa na klíč. Každá stránka = jedna kampaň = jedna LP s jasným CTA.</div>
+          </div>
+          <div class="rec-impact">↑ Konverze +40–60%</div>
+        </div>
+        <div class="rec-row">
+          <div class="rec-phase" style="background:var(--red-dim); color:var(--red);">Ihned</div>
+          <div>
+            <div class="rec-title">Silné CTA na celém webu</div>
+            <div class="rec-desc">Nahradit pasivní výzvy aktivními: „Získejte kalkulaci do 24h", „Domluvte si prohlídku showroomu", „Poptejte zdarma".</div>
+          </div>
+          <div class="rec-impact">↑ Engagement +25%</div>
+        </div>
+        <div class="rec-row">
+          <div class="rec-phase" style="background:var(--yellow-dim); color:var(--yellow);">1–3 měs.</div>
+          <div>
+            <div class="rec-title">Remarketing a segmentace</div>
+            <div class="rec-desc">Nastavit remarketingové kampaně segmentované podle produktového zájmu. Využít GA4 audiences pro přesnější cílení.</div>
+          </div>
+          <div class="rec-impact">↓ CPA −20–30%</div>
+        </div>
+        <div class="rec-row">
+          <div class="rec-phase" style="background:var(--yellow-dim); color:var(--yellow);">1–3 měs.</div>
+          <div>
+            <div class="rec-title">Kalkulátor na webu</div>
+            <div class="rec-desc">Interaktivní kalkulátor ceny terasy (rozměr × materiál = orientační cena). Woodparket ho má — je to silný konverzní a kvalifikační prvek.</div>
+          </div>
+          <div class="rec-impact">↑ Lead quality</div>
+        </div>
+        <div class="rec-row">
+          <div class="rec-phase" style="background:var(--teal-dim); color:var(--teal);">3–12 měs.</div>
+          <div>
+            <div class="rec-title">Obsahový marketing & SEO</div>
+            <div class="rec-desc">Blog s edukačními články: „Jak vybrat terasu", „WPC vs dřevo", „Cena pergoly 2025". Snížit závislost na PPC organickými pozicemi.</div>
+          </div>
+          <div class="rec-impact">↓ PPC závislost</div>
+        </div>
+        <div class="rec-row" style="border-bottom:none;">
+          <div class="rec-phase" style="background:var(--teal-dim); color:var(--teal);">Dlouhodobě</div>
+          <div>
+            <div class="rec-title">Jasné strategické vymezení značky</div>
+            <div class="rec-desc">Rozhodnutí: prémiový expert NEBO výkonnostní objem. Bez jasného rozhodnutí bude komunikace dál rozmělněná a firma nedosáhne na pozici lídra v regionu.</div>
+          </div>
+          <div class="rec-impact">🏆 Lídr regionu</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: VERDIKT -->
+    <div class="page" id="page-verdikt">
+      <div class="section-header">
+        <div class="section-num">08</div>
+        <div class="section-info">
+          <div class="section-title">Finální verdikt</div>
+          <div class="section-desc">Celkové zhodnocení a závěr analýzy</div>
+        </div>
+      </div>
+
+      <div class="verdict-box">
+        <div class="verdict-headline">Terasiště není slabá firma.<br><span>Je marketingově nevyužitá.</span></div>
+        <div class="verdict-text">
+          Firma má silný produkt, fyzický showroom, reálné reference a dobře nastavenou hybridní obchodní strukturu. 
+          Největší příležitost leží v digitálu — kde firma aktuálně nehraje na svůj plný potenciál.
+          Zvýšit výkon je možné bez zásadního navyšování rozpočtu: stačí lépe propojit PPC → landing page → remarketing → konverze.
+        </div>
+        <div class="verdict-tags">
+          <span class="verdict-tag" style="border-color:var(--teal); color:var(--teal);">✅ Produkt: silný</span>
+          <span class="verdict-tag" style="border-color:var(--teal); color:var(--teal);">✅ Showroom: unikátní</span>
+          <span class="verdict-tag" style="border-color:var(--red); color:var(--red);">⚠ Marketing: podvýkon</span>
+          <span class="verdict-tag" style="border-color:var(--yellow); color:var(--yellow);">⚠ Positioning: nejasný</span>
+          <span class="verdict-tag" style="border-color:var(--pink); color:var(--pink);">🚀 Potenciál: vysoký</span>
+        </div>
+      </div>
+
+      <div class="grid-3" style="margin-top:24px;">
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--pink-dim); font-size:28px;">6.2</div>
+          <div class="stat-body">
+            <div class="stat-label">Celkové skóre</div>
+            <div class="stat-val" style="font-size:16px; color:var(--muted)">z 10 bodů</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--teal-dim)">🎯</div>
+          <div class="stat-body">
+            <div class="stat-label">Největší příležitost</div>
+            <div class="stat-val" style="font-size:15px">PPC + LP + Remarketing</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:var(--yellow-dim)">⚡</div>
+          <div class="stat-body">
+            <div class="stat-label">Hlavní riziko</div>
+            <div class="stat-val" style="font-size:15px">Woodparket & Planko</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: MISE & VIZE -->
+    <div class="page" id="page-misevize">
+      <div class="section-header">
+        <div class="section-num">09</div>
+        <div class="section-info">
+          <div class="section-title">Mise, Vize & Strategie</div>
+          <div class="section-desc">Směřování firmy Terasiště — kam chce dojít a jak toho dosáhnout</div>
+        </div>
+      </div>
+
+      <!-- MISE + VIZE vedle sebe -->
+      <div class="grid-2" style="margin-bottom:24px;">
+        <div class="verdict-box" style="padding:32px; text-align:left;">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--pink); margin-bottom:12px;">🎯 Mise</div>
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:26px; font-weight:900; color:var(--text); line-height:1.2; margin-bottom:16px;">Pomáháme lidem vytvořit<br><span style="color:var(--pink)">místo, kde chtějí trávit čas.</span></div>
+          <div style="font-size:13px; color:#a0adb4; line-height:1.7; margin-bottom:20px;">Terasiště není jen dodavatel materiálu nebo realizátor. Firma vytváří funkční a estetický prostor, který má přímý dopad na kvalitu života zákazníka.</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <span class="verdict-tag" style="border-color:var(--pink); color:var(--pink); font-size:12px; padding:5px 12px;">🤝 Jednoduchost</span>
+            <span class="verdict-tag" style="border-color:var(--pink); color:var(--pink); font-size:12px; padding:5px 12px;">✨ Kvalita</span>
+            <span class="verdict-tag" style="border-color:var(--pink); color:var(--pink); font-size:12px; padding:5px 12px;">🔒 Důvěra & jistota</span>
+          </div>
+        </div>
+        <div style="background:linear-gradient(135deg, rgba(0,196,180,0.1), rgba(0,196,180,0.03)); border:1px solid rgba(0,196,180,0.3); border-radius:16px; padding:32px;">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--teal); margin-bottom:12px;">🚀 Vize</div>
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; color:var(--text); line-height:1.2; margin-bottom:16px;">Stát se <span style="color:var(--teal)">první volbou</span> pro realizaci teras a pergol na jižní Moravě a postupně v celé ČR.</div>
+          <div style="font-size:13px; color:#a0adb4; line-height:1.7; margin-bottom:20px;">Nejen jako dodavatel, ale jako partner, garant kvality a značka, které zákazník věří.</div>
+          <ul class="check-list" style="margin-top:0;">
+            <li><span class="check-icon" style="color:var(--teal)">→</span>Zákazník aktivně vyhledává Terasiště</li>
+            <li><span class="check-icon" style="color:var(--teal)">→</span>Firma není tlačena cenou</li>
+            <li><span class="check-icon" style="color:var(--teal)">→</span>Značka má jasnou pozici na trhu</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- STRATEGICKE ROZHODNUTI -->
+      <div class="section-box open" style="margin-bottom:16px;">
+        <div class="section-box-header" onclick="toggleBox(this)">
+          <div class="section-box-title">⚡ Klíčové strategické rozhodnutí</div>
+          <span class="section-box-badge badge-pink">Doporučeno: Varianta B</span>
+          <div class="section-box-chevron">▼</div>
+        </div>
+        <div class="section-box-body"><div class="section-box-inner">
+          <div class="grid-2">
+            <div class="card" style="border-color:rgba(107,122,130,0.3); opacity:0.7;">
+              <div style="font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:900; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Varianta A — Objemový hráč</div>
+              <ul class="check-list">
+                <li><span class="check-icon" style="color:var(--muted)">•</span>Více zakázek</li>
+                <li><span class="check-icon" style="color:var(--muted)">•</span>Nižší marže</li>
+                <li><span class="check-icon" style="color:var(--muted)">•</span>Vyšší tlak na cenu</li>
+                <li><span class="check-icon" style="color:var(--muted)">•</span>Méně stabilní byznys</li>
+              </ul>
+            </div>
+            <div class="card" style="border-color:rgba(233,30,140,0.4); background: rgba(233,30,140,0.04);">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <div style="font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:900; color:var(--pink); text-transform:uppercase; letter-spacing:1px;">Varianta B — Prémiový partner</div>
+                <span class="section-box-badge badge-pink" style="font-size:10px;">✓ Doporučeno</span>
+              </div>
+              <ul class="check-list">
+                <li><span class="check-icon" style="color:var(--pink)">+</span>Méně zakázek, vyšší hodnota</li>
+                <li><span class="check-icon" style="color:var(--pink)">+</span>Lepší typ klienta</li>
+                <li><span class="check-icon" style="color:var(--pink)">+</span>Vyšší marže</li>
+                <li><span class="check-icon" style="color:var(--pink)">+</span>Stabilnější a předvídatelnější byznys</li>
+                <li><span class="check-icon" style="color:var(--pink)">+</span>Menší cenová citlivost zákazníků</li>
+              </ul>
+            </div>
+          </div>
+          <div class="highlight-bar" style="margin-top:16px;">
+            💡 Doporučený směr positioningu: <strong>„Terasa bez starostí" / „Kompletní řešení od návrhu po realizaci"</strong> — zákazník neřeší cenu jako první, rozhoduje se podle jistoty a kvality.
+          </div>
+        </div></div>
+      </div>
+
+      <!-- STRATEGIE ROZVOJE — 5 pilířů jako interaktivní karty -->
+      <div style="font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:14px; margin-top:8px;">Strategie rozvoje — 5 pilířů</div>
+
+      <div id="pillarTabs" style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+        <button class="pillar-tab active" onclick="showPillar('positioning')">🎯 Positioning</button>
+        <button class="pillar-tab" onclick="showPillar('marketing')">📣 Marketing</button>
+        <button class="pillar-tab" onclick="showPillar('produkt')">📦 Produkt</button>
+        <button class="pillar-tab" onclick="showPillar('obchod')">🤝 Obchod</button>
+        <button class="pillar-tab" onclick="showPillar('skalovani')">📈 Škálování</button>
+      </div>
+
+      <div class="pillar-panel active card" id="pillar-positioning">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; color:var(--pink); text-transform:uppercase; letter-spacing:2px; margin-bottom:8px;">🎯 Positioning — nejdůležitější krok</div>
+        <div style="font-size:13px; color:var(--muted); margin-bottom:16px;">Firma musí být jasně čitelná. Zákazník musí okamžitě pochopit, co dostane.</div>
+        <div class="highlight-bar" style="margin-bottom:16px;">
+          Doporučený směr: <strong>„Terasa bez starostí" / „Kompletní řešení od návrhu po realizaci"</strong>
+        </div>
+        <div class="grid-2">
+          <div>
+            <div style="font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Cíl</div>
+            <ul class="check-list">
+              <li><span class="check-icon" style="color:var(--pink)">→</span>Zákazník neřeší cenu jako první</li>
+              <li><span class="check-icon" style="color:var(--pink)">→</span>Rozhoduje se podle jistoty a kvality</li>
+              <li><span class="check-icon" style="color:var(--pink)">→</span>Firma se jasně odlišuje od konkurence</li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Jak poznat úspěch</div>
+            <ul class="check-list">
+              <li><span class="check-icon" style="color:var(--teal)">✓</span>Zákazník aktivně vyhledává Terasiště</li>
+              <li><span class="check-icon" style="color:var(--teal)">✓</span>Firma nesmlouvá o ceně</li>
+              <li><span class="check-icon" style="color:var(--teal)">✓</span>Jasná odpověď: „proč zrovna my"</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="pillar-panel card" id="pillar-marketing" style="display:none;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; color:var(--pink); text-transform:uppercase; letter-spacing:2px; margin-bottom:16px;">📣 Marketing — tři horizonty</div>
+        <div class="rec-row" style="padding-top:0;">
+          <div class="rec-phase" style="background:var(--red-dim); color:var(--red);">Krátko&shy;době</div>
+          <div>
+            <div class="rec-title">Landing pages + remarketing + struktura kampaní</div>
+            <div class="rec-desc">Každá kampaň musí mít vlastní landing page. Nastavit remarketing podle produktového zájmu. Přestat posílat traffic na generický web.</div>
+          </div>
+          <div class="rec-impact">↑ Konverze</div>
+        </div>
+        <div class="rec-row">
+          <div class="rec-phase" style="background:var(--yellow-dim); color:var(--yellow);">Středně&shy;době</div>
+          <div>
+            <div class="rec-title">SEO (lokální + produktové) + případové studie + reference</div>
+            <div class="rec-desc">Cíl: stabilní přísun poptávek i bez PPC. Blog s edukačními články, lokální optimalizace, budování důvěry přes skutečné příběhy zákazníků.</div>
+          </div>
+          <div class="rec-impact">↓ Závislost PPC</div>
+        </div>
+        <div class="rec-row" style="border-bottom:none;">
+          <div class="rec-phase" style="background:var(--teal-dim); color:var(--teal);">Dlouho&shy;době</div>
+          <div>
+            <div class="rec-title">Budování značky + video obsah + edukace zákazníka</div>
+            <div class="rec-desc">Zákazník si firmu vybírá, ne porovnává. Video realizací, YouTube kanál, edukační obsah. Terasiště jako autorita v oboru.</div>
+          </div>
+          <div class="rec-impact">🏆 Brand</div>
+        </div>
+
+        <!-- ONLINE vs OFFLINE block -->
+        <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:16px; font-weight:800; text-transform:uppercase; letter-spacing:1.5px; color:var(--text); margin-bottom:14px;">Online vs. offline — jak rozdělit investice</div>
+          <div class="grid-2" style="margin-bottom:16px;">
+            <div style="background:rgba(233,30,140,0.06); border:1px solid rgba(233,30,140,0.25); border-radius:12px; padding:18px;">
+              <div style="font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800; color:var(--pink); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">💻 Online — výkonnostní páteř</div>
+              <ul class="check-list">
+                <li><span class="check-icon" style="color:var(--pink)">→</span>PPC, SEO, remarketing, social</li>
+                <li><span class="check-icon" style="color:var(--pink)">→</span>Měřitelné výsledky, přímá návratnost</li>
+                <li><span class="check-icon" style="color:var(--pink)">→</span>Přivádí konkrétní poptávky</li>
+                <li><span class="check-icon" style="color:var(--pink)">→</span>Škálovatelné podle sezóny a rozpočtu</li>
+              </ul>
+              <div style="margin-top:12px; font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:900; color:var(--pink);">Převažuje</div>
+              <div style="font-size:12px; color:var(--muted);">Základ výkonnostního marketingu</div>
+            </div>
+            <div style="background:rgba(245,197,24,0.06); border:1px solid rgba(245,197,24,0.25); border-radius:12px; padding:18px;">
+              <div style="font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800; color:var(--yellow); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">🏪 Offline — budování značky</div>
+              <ul class="check-list">
+                <li><span class="check-icon" style="color:var(--yellow)">→</span>Showroom, výstavy, lokální akce</li>
+                <li><span class="check-icon" style="color:var(--yellow)">→</span>Fyzický zážitek s produktem</li>
+                <li><span class="check-icon" style="color:var(--yellow)">→</span>Důvěra a emocionální vazba</li>
+                <li><span class="check-icon" style="color:var(--yellow)">→</span>Doporučení a word-of-mouth</li>
+              </ul>
+              <div style="margin-top:12px; font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:900; color:var(--yellow);">Podpůrný</div>
+              <div style="font-size:12px; color:var(--muted);">Nenahraditelný pro prémiový brand</div>
+            </div>
+          </div>
+          <div style="background:linear-gradient(135deg, rgba(233,30,140,0.08), rgba(245,197,24,0.06)); border:1px solid rgba(233,30,140,0.2); border-radius:12px; padding:20px;">
+            <div style="font-family:'Barlow Condensed',sans-serif; font-size:14px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--text); margin-bottom:10px;">⚖️ Klíčové rozhodnutí</div>
+            <div style="font-size:14px; color:#c4cacf; line-height:1.75;">
+              Poměr investic online vs. offline <strong style="color:var(--text);">musí korespondovat s tím, kam se firma chce dostat</strong> — ne jen s tím, co teď přináší levnější lead.<br><br>
+              Pokud je cílem <strong style="color:var(--pink);">prémiový positioning</strong>, offline nelze zanedbat — showroom, fyzický kontakt a lokální viditelnost jsou součástí prémiového zážitku, ne nadstavbou.<br>
+              Pokud je cílem <strong style="color:var(--teal);">objemový růst</strong>, online výrazně dominuje a offline slouží jen jako podpůrný kanál pro konverze.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pillar-panel card" id="pillar-produkt" style="display:none;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; color:var(--pink); text-transform:uppercase; letter-spacing:2px; margin-bottom:16px;">📦 Produkt — od nabídky k řešení</div>
+        <div class="highlight-bar" style="border-color:var(--yellow); background:var(--yellow-dim); color:#c4a030; margin-bottom:20px;">
+          Přechod z: <strong>„nabízíme všechno"</strong> → na: <strong>„nabízíme řešení"</strong>
+        </div>
+        <div class="grid-3">
+          <div class="card" style="background:rgba(233,30,140,0.05); border-color:rgba(233,30,140,0.2);">
+            <div class="card-icon">🪵</div>
+            <div class="card-title">Řešení 1</div>
+            <div class="card-value" style="font-size:18px;">Terasa na klíč</div>
+            <div class="card-sub">Od návrhu po realizaci bez starostí zákazníka</div>
+          </div>
+          <div class="card" style="background:rgba(233,30,140,0.05); border-color:rgba(233,30,140,0.2);">
+            <div class="card-icon">🏠</div>
+            <div class="card-title">Řešení 2</div>
+            <div class="card-value" style="font-size:18px;">Terasa + pergola</div>
+            <div class="card-sub">Kompletní zastřešení venkovního prostoru</div>
+          </div>
+          <div class="card" style="background:rgba(233,30,140,0.05); border-color:rgba(233,30,140,0.2);">
+            <div class="card-icon">🌿</div>
+            <div class="card-title">Řešení 3</div>
+            <div class="card-value" style="font-size:18px;">Zahradní řešení</div>
+            <div class="card-sub">Kompletní zahradní prostor jako jeden projekt</div>
+          </div>
+        </div>
+        <div style="margin-top:16px; display:flex; gap:12px; flex-wrap:wrap;">
+          <span class="verdict-tag" style="border-color:var(--teal); color:var(--teal); font-size:12px; padding:5px 12px;">↑ Vyšší průměrná zakázka</span>
+          <span class="verdict-tag" style="border-color:var(--teal); color:var(--teal); font-size:12px; padding:5px 12px;">↓ Jednodušší rozhodování pro zákazníka</span>
+        </div>
+      </div>
+
+      <div class="pillar-panel card" id="pillar-obchod" style="display:none;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; color:var(--pink); text-transform:uppercase; letter-spacing:2px; margin-bottom:16px;">🤝 Obchod — zlepšit tři věci</div>
+        <div class="grid-3">
+          <div class="card" style="background:rgba(0,196,180,0.04); border-color:rgba(0,196,180,0.2);">
+            <div class="card-icon">⚡</div>
+            <div class="card-title">Rychlost reakce</div>
+            <div class="card-value" style="font-size:18px; color:var(--teal);">Do 24h</div>
+            <div class="card-sub">Zákazník čeká rychlou odezvu — každá hodina prodlení snižuje pravděpodobnost zakázky</div>
+          </div>
+          <div class="card" style="background:rgba(0,196,180,0.04); border-color:rgba(0,196,180,0.2);">
+            <div class="card-icon">📋</div>
+            <div class="card-title">Struktura nabídky</div>
+            <div class="card-value" style="font-size:18px; color:var(--teal);">Jasná</div>
+            <div class="card-sub">Nabídka musí být přehledná, s jasnou hodnotou, ne jen ceník položek</div>
+          </div>
+          <div class="card" style="background:rgba(0,196,180,0.04); border-color:rgba(0,196,180,0.2);">
+            <div class="card-icon">💬</div>
+            <div class="card-title">Práce s emocí</div>
+            <div class="card-value" style="font-size:18px; color:var(--teal);">Příběh</div>
+            <div class="card-sub">Zákazník kupuje pocit pohody a jistoty, ne jen dřevo nebo WPC desky</div>
+          </div>
+        </div>
+        <div class="highlight-bar" style="margin-top:16px; border-color:var(--teal); background:var(--teal-dim); color:#50c4b8;">
+          🎯 Cíl: vyšší úspěšnost uzavřených obchodů + vyšší průměrná hodnota zakázky
+        </div>
+      </div>
+
+      <div class="pillar-panel card" id="pillar-skalovani" style="display:none;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900; color:var(--pink); text-transform:uppercase; letter-spacing:2px; margin-bottom:16px;">📈 Škálování — postup ve třech krocích</div>
+        <div class="funnel">
+          <div class="funnel-step">
+            <div class="funnel-bar" style="width:100%"></div>
+            <div class="funnel-arrow" style="font-weight:900; color:var(--pink);">1.</div>
+            <div class="funnel-label">Stabilizovat region (Jihomoravský kraj)</div>
+            <span class="funnel-status" style="background:var(--pink-dim); color:var(--pink);">Aktuálně</span>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar" style="width:70%; background:rgba(245,197,24,0.08)"></div>
+            <div class="funnel-arrow" style="font-weight:900; color:var(--yellow);">2.</div>
+            <div class="funnel-label">Nastavit procesy a připravit tým na rozšíření</div>
+            <span class="funnel-status" style="background:var(--yellow-dim); color:var(--yellow);">Plánováno</span>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar" style="width:40%; background:rgba(0,196,180,0.06)"></div>
+            <div class="funnel-arrow" style="font-weight:900; color:var(--teal);">3.</div>
+            <div class="funnel-label">Rozšíření do dalších regionů / celá ČR</div>
+            <span class="funnel-status" style="background:var(--teal-dim); color:var(--teal);">Výhled</span>
+          </div>
+        </div>
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="stat-card"><div class="stat-icon-wrap" style="background:var(--pink-dim)">📍</div><div class="stat-body"><div class="stat-label">Možnost A</div><div class="stat-val" style="font-size:14px;">Nové regiony</div></div></div>
+          <div class="stat-card"><div class="stat-icon-wrap" style="background:var(--teal-dim)">💻</div><div class="stat-body"><div class="stat-label">Možnost B</div><div class="stat-val" style="font-size:14px;">Silnější online</div></div></div>
+          <div class="stat-card"><div class="stat-icon-wrap" style="background:var(--yellow-dim)">👥</div><div class="stat-body"><div class="stat-label">Možnost C</div><div class="stat-val" style="font-size:14px;">Rozšíření týmu</div></div></div>
+        </div>
+      </div>
+
+      <!-- HLAVNI RIZIKO -->
+      <div style="margin-top:24px;">
+        <div class="card" style="border-color:rgba(255,71,87,0.3); background:rgba(255,71,87,0.04);">
+          <div style="font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:900; color:var(--red); text-transform:uppercase; letter-spacing:2px; margin-bottom:12px;">⚡ Hlavní riziko firmy</div>
+          <div style="font-size:15px; color:var(--text); font-weight:600; margin-bottom:10px;">Největší riziko není konkurence. Je to být <em style="color:var(--red);">„někde mezi".</em></div>
+          <div class="grid-3">
+            <div style="padding:14px; background:var(--red-dim); border-radius:10px; text-align:center;">
+              <div style="font-size:20px; margin-bottom:6px;">🔴</div>
+              <div style="font-size:13px; color:var(--text); font-weight:500;">Není nejlevnější</div>
+            </div>
+            <div style="padding:14px; background:var(--red-dim); border-radius:10px; text-align:center;">
+              <div style="font-size:20px; margin-bottom:6px;">🔴</div>
+              <div style="font-size:13px; color:var(--text); font-weight:500;">Není prémiový</div>
+            </div>
+            <div style="padding:14px; background:var(--red-dim); border-radius:10px; text-align:center;">
+              <div style="font-size:20px; margin-bottom:6px;">🔴</div>
+              <div style="font-size:13px; color:var(--text); font-weight:500;">Není nejviditelnější</div>
+            </div>
+          </div>
+          <div class="highlight-bar" style="margin-top:16px; border-color:var(--red); background:var(--red-dim); color:#c08080;">
+            Výsledek: slabší pozice na trhu, rozmělněná komunikace, ztráta zákazníků kteří hledají jasnou hodnotu.
+          </div>
+        </div>
+      </div>
+
+      <!-- ZAVER -->
+      <div class="verdict-box" style="margin-top:24px; text-align:left;">
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--pink); margin-bottom:10px;">📌 Strategický závěr</div>
+        <div style="font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:900; color:var(--text); line-height:1.2; margin-bottom:14px;">Posunout Terasiště z dobré realizační firmy<br>na <span style="color:var(--pink)">silnou značku, která prodává jistotu</span> — ne jen produkt.</div>
+        <div style="font-size:13px; color:#a0adb4; line-height:1.8; margin-bottom:20px;">Další růst nebude jen o marketingu. Bude o rozhodnutí, čím firma chce být. A to rozhodnutí určí typ zákazníků, ziskovost a budoucnost firmy.</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <span class="verdict-tag" style="border-color:var(--pink); color:var(--pink);">🎯 Lepší klient</span>
+          <span class="verdict-tag" style="border-color:var(--teal); color:var(--teal);">💰 Vyšší marže</span>
+          <span class="verdict-tag" style="border-color:var(--yellow); color:var(--yellow);">🏆 Silnější značka</span>
+          <span class="verdict-tag" style="border-color:var(--text); color:var(--muted);">↓ Závislost na ceně</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+const pages = {
+  profil: { title: 'Profil firmy', num: 0 },
+  web: { title: 'Analýza webu', num: 1 },
+  ppc: { title: 'PPC & Marketing', num: 2 },
+  konkurence: { title: 'Konkurence', num: 3 },
+  swot: { title: 'SWOT analýza', num: 4 },
+  strategie: { title: 'Strategický závěr', num: 5 },
+  misevize: { title: 'Mise, Vize & Strategie', num: 8 },
+  doporuceni: { title: 'Doporučení', num: 6 },
+  verdikt: { title: 'Finální verdikt', num: 7 }
+};
+
+function showPage(id) {
+  // Hide all
+  document.querySelectorAll('.page').forEach(p => {
+    p.classList.remove('active');
+    p.style.display = 'none';
+  });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+  // Show target — force reflow so CSS transition fires
+  const target = document.getElementById('page-' + id);
+  target.style.display = 'block';
+  target.offsetHeight; // force reflow
+  target.classList.add('active');
+
+  // Update nav
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + id + "'")) {
+      n.classList.add('active');
+    }
+  });
+
+  // Update tabs
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'" + id + "'")) {
+      b.classList.add('active');
+    }
+  });
+
+  // Update topbar
+  document.getElementById('topbarTitle').textContent = pages[id]?.title || id;
+
+  // Scroll to top
+  document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Animate progress bars
+  setTimeout(() => {
+    target.querySelectorAll('.progress-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0';
+      setTimeout(() => bar.style.width = w, 50);
+    });
+  }, 100);
+}
+
+function showPillar(id) {
+  document.querySelectorAll('.pillar-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.pillar-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pillar-' + id).style.display = 'block';
+  event.target.classList.add('active');
+}
+
+function toggleBox(header) {
+  const box = header.closest('.section-box');
+  box.classList.toggle('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize first page properly
+  showPage('profil');
+
+  setTimeout(() => {
+    document.querySelectorAll('#page-profil .progress-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0';
+      setTimeout(() => bar.style.width = w, 200);
+    });
+  }, 300);
+});
+</script>
+</body>
+</html>
